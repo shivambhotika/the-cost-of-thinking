@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI_STACK.SYS :: TERMINAL v2.3.1</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Courier+Prime&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #00ff41;
+            --primary-dim: #00aa00;
+            --primary-bright: #00ff88;
+            --secondary: #ffff00;
+            --danger: #ff4444;
+            --info: #00ccff;
+            --bg: #000000;
+            --bg-panel: #0a0a0a;
+        }
+        
+        body {
+            font-family: 'Courier Prime', monospace;
+            background: var(--bg);
+            color: var(--primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.15;
+        }
+        
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 9999;
+            animation: flicker 0.15s infinite;
+        }
+        
+        @keyframes flicker {
+            0% { opacity: 0.97; }
+            50% { opacity: 1; }
+            100% { opacity: 0.97; }
+        }
+        
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+            background-size: 100% 4px;
+            z-index: 9998;
+            pointer-events: none;
+        }
+        
+        .screen {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            box-shadow: 0 0 200px rgba(0, 255, 65, 0.3);
+        }
+        
+        .terminal-window {
+            border: 3px solid var(--primary);
+            background: var(--bg-panel);
+            margin: 1.5rem 0;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.3), inset 0 0 30px rgba(0, 255, 65, 0.05);
+        }
+        
+        .terminal-header {
+            background: var(--primary);
+            color: var(--bg);
+            padding: 0.5rem 1rem;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .terminal-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .terminal-button {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 1px solid var(--bg);
+        }
+        
+        .terminal-body {
+            padding: 1.5rem;
+        }
+        
+        h1 {
+            font-family: 'VT323', monospace;
+            font-size: 4rem;
+            text-align: center;
+            margin: 2rem 0;
+            text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--primary);
+            letter-spacing: 8px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary); }
+            to { text-shadow: 0 0 20px var(--primary), 0 0 30px var(--primary), 0 0 40px var(--primary); }
+        }
+        
+        h2 {
+            font-family: 'VT323', monospace;
+            font-size: 2.5rem;
+            margin: 1.5rem 0 1rem 0;
+            color: var(--primary-bright);
+            text-shadow: 0 0 10px var(--primary);
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            margin: 1rem 0;
+            color: var(--secondary);
+        }
+        
+        .prompt {
+            color: var(--primary-bright);
+            margin: 0.5rem 0;
+            font-family: 'VT323', monospace;
+            font-size: 1.3rem;
+        }
+        
+        .prompt::before {
+            content: "[root@ai-stack ~]$ ";
+            color: var(--primary-dim);
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            margin: 0.2rem;
+            border: 1px solid;
+            font-size: 0.85rem;
+        }
+        
+        .status-ok { color: var(--primary); border-color: var(--primary); }
+        .status-loading { color: var(--secondary); border-color: var(--secondary); animation: pulse 1s infinite; }
+        .status-warning { color: var(--danger); border-color: var(--danger); }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .term {
+            position: relative;
+            display: inline-block;
+            color: var(--secondary);
+            cursor: help;
+            border-bottom: 2px dotted var(--secondary);
+            transition: all 0.3s;
+        }
+        
+        .term:hover {
+            color: var(--primary-bright);
+            border-bottom-color: var(--primary-bright);
+        }
+        
+        .term .definition {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            z-index: 10000;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 350px;
+            background: var(--bg);
+            border: 3px solid var(--primary);
+            padding: 1.5rem;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+            transition: all 0.3s;
+        }
+        
+        .term:hover .definition {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .definition::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: var(--primary) transparent transparent transparent;
+        }
+        
+        .definition .def-title {
+            color: var(--secondary);
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            font-family: 'VT323', monospace;
+        }
+        
+        .definition .def-text {
+            color: var(--primary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .definition .def-example {
+            color: var(--info);
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--primary-dim);
+        }
+        
+        .expandable {
+            border: 2px solid var(--primary-dim);
+            margin: 1rem 0;
+            background: rgba(0, 20, 0, 0.5);
+        }
+        
+        .expandable-header {
+            padding: 1rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 40, 0, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .expandable-header:hover {
+            background: rgba(0, 60, 0, 0.5);
+        }
+        
+        .expandable-indicator {
+            font-family: 'VT323', monospace;
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+        }
+        
+        .expandable.open .expandable-indicator {
+            transform: rotate(90deg);
+        }
+        
+        .expandable-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+            padding: 0 1rem;
+        }
+        
+        .expandable.open .expandable-content {
+            max-height: 3000px;
+            padding: 1rem;
+        }
+        
+        .info-box {
+            background: rgba(0, 30, 0, 0.6);
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            line-height: 1.8;
+        }
+        
+        .info-box.beginner {
+            border-left-color: var(--info);
+            background: rgba(0, 20, 40, 0.6);
+        }
+        
+        .info-box.warning {
+            border-left-color: var(--danger);
+            background: rgba(40, 0, 0, 0.6);
+        }
+        
+        .info-box.highlight {
+            border-left-color: var(--secondary);
+            background: rgba(40, 40, 0, 0.6);
+        }
+        
+        .info-title {
+            font-family: 'VT323', monospace;
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            border: 2px solid var(--primary);
+            padding: 1.5rem;
+            background: rgba(0, 20, 0, 0.8);
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: "[CLICK FOR DETAILS]";
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            font-size: 0.65rem;
+            color: var(--primary-dim);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .stat-card:hover {
+            background: rgba(0, 40, 0, 0.9);
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.5);
+            transform: translateY(-4px);
+            border-color: var(--primary-bright);
+        }
+        
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--primary-dim);
+            margin-bottom: 0.5rem;
+            font-family: 'VT323', monospace;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-family: 'VT323', monospace;
+            color: var(--primary-bright);
+            text-shadow: 0 0 10px var(--primary);
+            margin: 0.5rem 0;
+        }
+        
+        .stat-context {
+            font-size: 0.9rem;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+        
+        .stat-comparison {
+            font-size: 0.85rem;
+            color: var(--primary-dim);
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--primary-dim);
+        }
+        
+        .progress-container {
+            margin: 1rem 0;
+        }
+        
+        .progress-label {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 24px;
+            background: rgba(0, 40, 0, 0.5);
+            border: 2px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 2s ease;
+            position: relative;
+            box-shadow: 0 0 10px var(--primary);
+        }
+        
+        .progress-fill::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .chart-wrapper {
+            background: rgba(0, 10, 0, 0.9);
+            border: 3px solid var(--primary);
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+        }
+        
+        .chart-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .chart-button {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        
+        .chart-button:hover {
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+        }
+        
+        .chart-button.active {
+            background: var(--primary);
+            color: var(--bg);
+            box-shadow: 0 0 20px var(--primary);
+        }
+        
+        .analogy {
+            background: rgba(0, 0, 40, 0.5);
+            border: 2px dashed var(--info);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .analogy-title {
+            color: var(--info);
+            font-family: 'VT323', monospace;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .analogy-title::before {
+            content: "💡 ";
+        }
+        
+        .ascii {
+            font-family: 'VT323', monospace;
+            font-size: 0.8rem;
+            line-height: 1.1;
+            color: var(--primary-dim);
+            white-space: pre;
+            text-align: center;
+            margin: 2rem 0;
+            overflow-x: auto;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+        }
+        
+        .modal-content {
+            background: var(--bg);
+            margin: 5% auto;
+            padding: 2rem;
+            border: 3px solid var(--primary);
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 50px rgba(0, 255, 65, 0.5);
+        }
+        
+        .modal-close {
+            color: var(--danger);
+            float: right;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'VT323', monospace;
+        }
+        
+        .modal-close:hover {
+            text-shadow: 0 0 10px var(--danger);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        th, td {
+            border: 1px solid var(--primary-dim);
+            padding: 0.8rem;
+            text-align: left;
+        }
+        
+        th {
+            background: rgba(0, 40, 0, 0.8);
+            color: var(--primary-bright);
+            font-family: 'VT323', monospace;
+            font-size: 1.1rem;
+        }
+        
+        tr:hover {
+            background: rgba(0, 30, 0, 0.5);
+        }
+        
+        .loading-dots::after {
+            content: "...";
+            animation: dots 1.5s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60%, 100% { content: "..."; }
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; letter-spacing: 4px; }
+            h2 { font-size: 1.8rem; }
+            .screen { padding: 1rem; }
+            .term .definition { width: 280px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+    <div class="scanlines"></div>
+    
+    <div class="screen">
+        <!-- Boot Sequence -->
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <span>AI_STACK.SYS v2.3.1 - TERMINAL INTERFACE</span>
+                <div class="terminal-buttons">
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                </div>
+            </div>
+            <div class="terminal-body">
+                <div class="prompt">systemctl start ai-analysis.service</div>
+                <div style="margin: 1rem 0;">
+                    <div><span class="status status-ok">[  OK  ]</span> Loading historical data...</div>
+                    <div><span class="status status-ok">[  OK  ]</span> Initializing visualization engine...</div>
+                    <div><span class="status status-ok">[  OK  ]</span> Connecting to knowledge base...</div>
+                    <div><span class="status status-loading">[READY]</span> System online<span class="loading-dots"></span></div>
+                </div>
+                
+                <h1>[ THE AI STACK ]</h1>
+                <div style="text-align: center; font-size: 1.2rem; margin: 1rem 0;">
+                    <span style="color: var(--primary-dim);">A Data-Driven Investigation</span><br>
+                    <span style="color: var(--info); font-size: 0.9rem;">From Physics → Intelligence</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Beginner's Guide -->
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <span>README.txt - START HERE IF YOU'RE NEW TO AI</span>
+                <div class="terminal-buttons">
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                </div>
+            </div>
+            <div class="terminal-body">
+                <div class="info-box beginner">
+                    <div class="info-title">🎓 BEGINNER MODE: What You're About To Learn</div>
+                    <p>This report breaks down AI into three simple questions:</p>
+                    <ol style="margin-left: 2rem; margin-top: 1rem; line-height: 2;">
+                        <li><strong>How much <span class="term">computing power<span class="definition"><div class="def-title">Computing Power</div><div class="def-text">The ability to do calculations. More computing power = more math = smarter AI.</div><div class="def-example">Like comparing a calculator to a supercomputer</div></span></span> does it take?</strong> (The Compute Index)</li>
+                        <li><strong>How much <span class="term">electricity<span class="definition"><div class="def-title">Electricity / Power</div><div class="def-text">AI models run on computers, which need electricity. Training big AI models uses as much power as a small city.</div><div class="def-example">GPT-4 training used ~50 megawatts for months</div></span></span> does that require?</strong> (The Power Index)</li>
+                        <li><strong>What can AI actually <span class="term">do<span class="definition"><div class="def-title">AI Capabilities</div><div class="def-text">What tasks AI can perform. We measure this with tests, just like testing humans.</div><div class="def-example">Can it write code? Pass medical exams? Understand images?</div></span></span>?</strong> (The Capability Index)</li>
+                    </ol>
+                </div>
+
+                <div class="expandable">
+                    <div class="expandable-header" onclick="toggleExpand(this)">
+                        <span style="color: var(--secondary);">▶ CLICK HERE: "Wait, what even IS AI?" (5-minute explanation)</span>
+                        <span class="expandable-indicator">▶</span>
+                    </div>
+                    <div class="expandable-content">
+                        <p><strong>AI in one sentence:</strong> Teaching computers to find patterns in data so they can make predictions or decisions.</p>
+                        
+                        <p style="margin-top: 1rem;"><strong>How it works (simple version):</strong></p>
+                        <ol style="margin-left: 2rem; line-height: 1.8;">
+                            <li>You show the computer millions of examples (books, images, conversations)</li>
+                            <li>It finds patterns (like "cats usually have pointy ears" or "this word usually comes after that word")</li>
+                            <li>When you ask it something new, it uses those patterns to respond</li>
+                        </ol>
+
+                        <p style="margin-top: 1rem;"><strong>Why it needs so much power:</strong> Finding patterns in billions of examples requires trillions of calculations. More examples + more calculations = better patterns = smarter AI.</p>
+                    </div>
+                </div>
+
+                <div class="expandable">
+                    <div class="expandable-header" onclick="toggleExpand(this)">
+                        <span style="color: var(--secondary);">▶ CLICK HERE: Key terms you'll see (with real-world comparisons)</span>
+                        <span class="expandable-indicator">▶</span>
+                    </div>
+                    <div class="expandable-content">
+                        <table>
+                            <tr>
+                                <th>Term</th>
+                                <th>What It Means</th>
+                                <th>Real-World Comparison</th>
+                            </tr>
+                            <tr>
+                                <td><strong>FLOPS</strong></td>
+                                <td>Calculations per second</td>
+                                <td>Like MPH for cars, but for computers</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Parameters</strong></td>
+                                <td>The "brain size" of the AI</td>
+                                <td>Like neurons in a brain. More = smarter (usually)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Training</strong></td>
+                                <td>Teaching the AI by showing it examples</td>
+                                <td>Like studying for a test, but for months straight</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TWh</strong></td>
+                                <td>Terawatt-hours of electricity</td>
+                                <td>1 TWh = enough to power 93,000 US homes for a year</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Benchmark</strong></td>
+                                <td>A standardized test for AI</td>
+                                <td>Like SATs for AI models</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPUTE INDEX - COMPLETE -->
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <span>01_COMPUTE_INDEX.log</span>
+                <div class="terminal-buttons">
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                </div>
+            </div>
+            <div class="terminal-body">
+                <div class="prompt">cat compute_analysis.txt</div>
+                <h2>PART 1: THE COMPUTE INDEX</h2>
+                <h3 style="color: var(--info);">How Much Computing Power Does It Take?</h3>
+
+                <div class="info-box">
+                    <div class="info-title">📊 THE BIG PICTURE</div>
+                    <p><strong>Main point:</strong> Training AI models requires an <span class="term">exponentially growing<span class="definition"><div class="def-title">Exponential Growth</div><div class="def-text">Doubling repeatedly. Not 1→2→3→4, but 1→2→4→8→16→32.</div><div class="def-example">Like compound interest or viral spread</div></span></span> amount of computation.</p>
+                    <p style="margin-top: 1rem;"><strong>Why it matters:</strong> This determines who can afford to build the most advanced AI. It's like asking "who can afford to build a bigger particle accelerator?"</p>
+                </div>
+
+                <div class="chart-wrapper">
+                    <h3>Training Compute Over Time</h3>
+                    <div style="font-size: 0.9rem; margin-bottom: 1rem; color: var(--primary-dim);">
+                        [Note: Logarithmic scale - each step up is 10x bigger than the last]
+                    </div>
+                    <div class="chart-controls">
+                        <span style="color: var(--primary-dim); margin-right: 1rem;">VIEW MODE:</span>
+                        <button class="chart-button active" onclick="showComputeView('flops', this)">📈 FLOPS</button>
+                        <button class="chart-button" onclick="showComputeView('cost', this)">💰 Cost ($M)</button>
+                    </div>
+                    <canvas id="computeChart" style="max-height: 500px;"></canvas>
+                    <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--primary-dim);">
+                        [SOURCE] Epoch AI Database (3,200+ models analyzed, Feb 2026)
+                    </div>
+                </div>
+
+                <div class="analogy">
+                    <div class="analogy-title">Making It Real: What 10²⁶ FLOPS Means</div>
+                    <p>GPT-5 used <strong>6.6 × 10²⁶ FLOPS</strong> to train. That's:</p>
+                    <ul style="margin-left: 2rem; margin-top: 0.5rem; line-height: 1.8;">
+                        <li>660,000,000,000,000,000,000,000,000 calculations</li>
+                        <li>If each calculation was a grain of sand, you'd fill <strong>10,000 Olympic swimming pools</strong></li>
+                        <li>If you could do 1 calculation per second, it would take you <strong>20 trillion years</strong></li>
+                        <li>Equivalent to every human on Earth doing <strong>80 billion calculations</strong> each</li>
+                    </ul>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="showModal('compute-growth')">
+                        <div class="stat-label">GROWTH RATE (2018-2025)</div>
+                        <div class="stat-value">4.4x / year</div>
+                        <div class="stat-context">Doubling every ~6 months</div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 85%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-comparison">
+                            GPT-1 (2018) → GPT-5 (2025) = <strong>21,000x increase</strong>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" onclick="showModal('compute-cost')">
+                        <div class="stat-label">CURRENT TRAINING COST</div>
+                        <div class="stat-value">$290M</div>
+                        <div class="stat-context">GPT-5 (2025)</div>
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>vs. GPT-3 ($4.6M)</span>
+                                <span>63x more</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-comparison">
+                            More than building a <strong>40-story skyscraper</strong>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" onclick="showModal('compute-future')">
+                        <div class="stat-label">WHERE THIS IS HEADING</div>
+                        <div class="stat-value">$1B+</div>
+                        <div class="stat-context">Predicted by 2027</div>
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>Progress to billion-dollar models</span>
+                                <span>29%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 29%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-comparison">
+                            Only <strong>5-6 organizations</strong> can afford this
+                        </div>
+                    </div>
+                </div>
+
+                <div class="expandable">
+                    <div class="expandable-header" onclick="toggleExpand(this)">
+                        <span style="color: var(--secondary);">▶ WHY is compute growing so fast? (Deep dive)</span>
+                        <span class="expandable-indicator">▶</span>
+                    </div>
+                    <div class="expandable-content">
+                        <p><strong>Three reasons:</strong></p>
+                        <ol style="margin-left: 2rem; line-height: 2;">
+                            <li>
+                                <strong>More data = better AI:</strong> Newer models are trained on more text, images, and videos.
+                                <div style="margin-left: 2rem; color: var(--primary-dim); font-size: 0.9rem;">
+                                    Example: GPT-3 saw 300 billion words. GPT-4 probably saw 10+ trillion.
+                                </div>
+                            </li>
+                            <li>
+                                <strong>Bigger models = smarter AI:</strong> Models with more parameters can learn more complex patterns.
+                                <div style="margin-left: 2rem; color: var(--primary-dim); font-size: 0.9rem;">
+                                    Example: GPT-1 had 117M parameters. GPT-5 has ~3 trillion (25,000x more).
+                                </div>
+                            </li>
+                            <li>
+                                <strong>The scaling law works:</strong> Research shows that 10x more compute reliably makes AI better.
+                                <div style="margin-left: 2rem; color: var(--primary-dim); font-size: 0.9rem;">
+                                    Every major AI lab has confirmed this pattern holds.
+                                </div>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="info-box highlight">
+                    <div class="info-title">⚡ KEY TAKEAWAY</div>
+                    <p>The compute requirement is growing <strong>faster than Moore's Law</strong> (which says chip performance doubles every 2 years).</p>
+                    <p style="margin-top: 0.5rem;">This means we can't just wait for better chips. We need <strong>more chips, more power, and more money</strong> to keep up.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- POWER INDEX - COMPLETE -->
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <span>02_POWER_INDEX.log</span>
+                <div class="terminal-buttons">
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                </div>
+            </div>
+            <div class="terminal-body">
+                <div class="prompt">cat power_consumption.txt</div>
+                <h2>PART 2: THE POWER INDEX</h2>
+                <h3 style="color: var(--info);">How Much Electricity Does This Require?</h3>
+
+                <div class="info-box">
+                    <div class="info-title">⚡ THE BIG PICTURE</div>
+                    <p><strong>Main point:</strong> All those calculations need electricity. AI's power hunger is doubling every 5 years.</p>
+                    <p style="margin-top: 1rem;"><strong>Why it matters:</strong> Energy infrastructure takes years to build. Countries that can't supply power can't compete in AI.</p>
+                </div>
+
+                <div class="expandable">
+                    <div class="expandable-header" onclick="toggleExpand(this)">
+                        <span style="color: var(--secondary);">▶ Wait, why does AI need SO MUCH power?</span>
+                        <span class="expandable-indicator">▶</span>
+                    </div>
+                    <div class="expandable-content">
+                        <p><strong>Simple explanation:</strong> Imagine you have <strong>10,000 supercomputers</strong> doing calculations <strong>24/7 for 3 months straight</strong>.</p>
+                        
+                        <p style="margin-top: 1rem;"><strong>The math:</strong></p>
+                        <ul style="margin-left: 2rem; line-height: 1.8;">
+                            <li>One NVIDIA H100 chip uses <strong>700 watts</strong> (like 7 old lightbulbs)</li>
+                            <li>A training cluster might have <strong>10,000-25,000 chips</strong></li>
+                            <li>Total power draw: <strong>7-18 megawatts</strong> (a small town)</li>
+                            <li>Running for <strong>3 months</strong> = 15-40 million kWh</li>
+                        </ul>
+
+                        <p style="margin-top: 1rem; color: var(--secondary);"><strong>Real example:</strong> Training GPT-4 likely used <strong>50 megawatts</strong> for several months. That's <strong>50,000 US homes</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="chart-wrapper">
+                    <h3>Global Data Center Energy Consumption</h3>
+                    <div class="chart-controls">
+                        <span style="color: var(--primary-dim); margin-right: 1rem;">VIEW MODE:</span>
+                        <button class="chart-button active" onclick="showPowerView('absolute', this)">📊 Total TWh</button>
+                        <button class="chart-button" onclick="showPowerView('percent', this)">📈 % of Global</button>
+                    </div>
+                    <canvas id="powerChart" style="max-height: 500px;"></canvas>
+                    <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--primary-dim);">
+                        [SOURCE] International Energy Agency (IEA) April 2025
+                    </div>
+                </div>
+
+                <div class="analogy">
+                    <div class="analogy-title">Making It Real: What 945 TWh Means</div>
+                    <p>By 2030, data centers will consume <strong>945 TWh per year</strong>. That's:</p>
+                    <ul style="margin-left: 2rem; margin-top: 0.5rem; line-height: 1.8;">
+                        <li>All of <strong>Japan's</strong> electricity consumption</li>
+                        <li>Enough to power <strong>88 million US homes</strong></li>
+                        <li><strong>3% of all electricity generated on Earth</strong></li>
+                        <li>More than the <strong>entire aviation industry</strong> uses globally</li>
+                    </ul>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="showModal('power-now')">
+                        <div class="stat-label">2024 CONSUMPTION</div>
+                        <div class="stat-value">415 TWh</div>
+                        <div class="stat-context">1.5% of global electricity</div>
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>Progress to 2030</span>
+                                <span>44%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 44%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-comparison">
+                            More than <strong>all of UK's electricity</strong> (300 TWh)
+                        </div>
+                    </div>
+
+                    <div class="stat-card" onclick="showModal('power-growth')">
+                        <div class="stat-label">GROWTH RATE</div>
+                        <div class="stat-value">15% / yr</div>
+                        <div class="stat-context">Doubling every 5 years</div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 75%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-comparison">
+                            <strong>4x faster</strong> than other sectors (3-4%/yr)
+                        </div>
+                    </div>
+
+                    <div class="stat-card" onclick="showModal('power-future')">
+                        <div class="stat-label">2030 PROJECTION</div>
+                        <div class="stat-value">945 TWh</div>
+                        <div class="stat-context">3% of global electricity</div>
+                        <div class="progress-container">
+                            <div class="progress-label">
+                                <span>Growth from 2024</span>
+                                <span>+128%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-comparison">
+                            Requires <strong>50 new power plants</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="expandable">
+                    <div class="expandable-header" onclick="toggleExpand(this)">
+                        <span style="color: var(--secondary);">▶ Who's using all this power? (Geographic breakdown)</span>
+                        <span class="expandable-indicator">▶</span>
+                    </div>
+                    <div class="expandable-content">
+                        <table>
+                            <tr>
+                                <th>Region</th>
+                                <th>2024 Usage</th>
+                                <th>2030 Projected</th>
+                                <th>Growth</th>
+                            </tr>
+                            <tr>
+                                <td><strong>United States</strong></td>
+                                <td>185 TWh</td>
+                                <td>425 TWh</td>
+                                <td style="color: var(--danger);">+130%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>China</strong></td>
+                                <td>103 TWh</td>
+                                <td>278 TWh</td>
+                                <td style="color: var(--danger);">+170%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Europe</strong></td>
+                                <td>64 TWh</td>
+                                <td>109 TWh</td>
+                                <td style="color: var(--secondary);">+70%</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Rest of World</strong></td>
+                                <td>63 TWh</td>
+                                <td>133 TWh</td>
+                                <td style="color: var(--primary);">+111%</td>
+                            </tr>
+                        </table>
+                        
+                        <p style="margin-top: 1rem; color: var(--secondary);"><strong>Key insight:</strong> US + China = <strong>80% of growth</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="info-box warning">
+                    <div class="info-title">🚨 THE CRITICAL BOTTLENECK</div>
+                    <p><strong>Problem:</strong> Electricity demand from AI is growing faster than new power plants are being built.</p>
+                    <p style="margin-top: 1rem;"><strong>What this means:</strong></p>
+                    <ul style="margin-left: 2rem; line-height: 1.8;">
+                        <li>Tech companies are <strong>buying their own power plants</strong></li>
+                        <li>Some regions may <strong>limit AI development</strong> due to grid constraints</li>
+                        <li>Energy costs will become <strong>40-60% of training costs</strong></li>
+                    </ul>
+                </div>
+
+                <div class="info-box highlight">
+                    <div class="info-title">⚡ KEY TAKEAWAY</div>
+                    <p>AI isn't just a software race. It's an <strong>infrastructure race</strong>.</p>
+                    <p style="margin-top: 0.5rem;">Winners will be determined by who can secure abundant electricity supply.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAPABILITY INDEX - COMPLETE -->
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <span>03_CAPABILITY_INDEX.log</span>
+                <div class="terminal-buttons">
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                </div>
+            </div>
+            <div class="terminal-body">
+                <div class="prompt">cat ai_capabilities.txt</div>
+                <h2>PART 3: THE CAPABILITY INDEX</h2>
+                <h3 style="color: var(--info);">What Can AI Actually Do?</h3>
+
+                <div class="info-box">
+                    <div class="info-title">🎯 THE BIG PICTURE</div>
+                    <p><strong>Main point:</strong> All that compute and power translates into measurable capabilities. We test AI the same way we test humans: with exams.</p>
+                    <p style="margin-top: 1rem;"><strong>Why it matters:</strong> This tells us which jobs/tasks are getting automated next.</p>
+                </div>
+
+                <div class="expandable">
+                    <div class="expandable-header" onclick="toggleExpand(this)">
+                        <span style="color: var(--secondary);">▶ How do we test AI? (Understanding benchmarks)</span>
+                        <span class="expandable-indicator">▶</span>
+                    </div>
+                    <div class="expandable-content">
+                        <div style="background: rgba(0,30,0,0.5); padding: 1rem; margin: 1rem 0; border-left: 3px solid var(--primary);">
+                            <strong>MMLU (Massive Multitask Language Understanding)</strong>
+                            <p style="margin: 0.5rem 0;">• 57 subjects (law, medicine, history, math)</p>
+                            <p style="margin: 0.5rem 0;">• Multiple choice questions</p>
+                            <p style="margin: 0.5rem 0; color: var(--secondary);">Example: "What is the primary function of the mitochondria?"</p>
+                        </div>
+
+                        <div style="background: rgba(0,30,0,0.5); padding: 1rem; margin: 1rem 0; border-left: 3px solid var(--info);">
+                            <strong>HumanEval (Coding Ability)</strong>
+                            <p style="margin: 0.5rem 0;">• 164 programming problems</p>
+                            <p style="margin: 0.5rem 0;">• AI must write working code</p>
+                            <p style="margin: 0.5rem 0; color: var(--secondary);">Example: "Write a function that finds the longest palindrome"</p>
+                        </div>
+
+                        <div style="background: rgba(0,30,0,0.5); padding: 1rem; margin: 1rem 0; border-left: 3px solid var(--secondary);">
+                            <strong>GSM8K (Math Reasoning)</strong>
+                            <p style="margin: 0.5rem 0;">• 8,000 grade-school math problems</p>
+                            <p style="margin: 0.5rem 0;">• Word problems requiring multi-step reasoning</p>
+                            <p style="margin: 0.5rem 0; color: var(--secondary);">Example: "If a store has 50 apples and sells 20%, how many are left?"</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-wrapper">
+                    <h3>AI Performance on Human Tests</h3>
+                    <div class="chart-controls">
+                        <span style="color: var(--primary-dim); margin-right: 1rem;">SHOW/HIDE:</span>
+                        <button class="chart-button active" id="btn-mmlu" onclick="toggleCapability('mmlu', this)">✓ MMLU</button>
+                        <button class="chart-button active" id="btn-humaneval" onclick="toggleCapability('humaneval', this)">✓ HumanEval</button>
+                        <button class="chart-button active" id="btn-gsm8k" onclick="toggleCapability('gsm8k', this)">✓ GSM8K</button>
+                    </div>
+                    <canvas id="capabilityChart" style="max-height: 500px;"></canvas>
+                    <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--primary-dim);">
+                        [SOURCE] OpenAI, Anthropic, Google DeepMind model cards
+                    </div>
+                </div>
+
+                <div class="analogy">
+                    <div class="analogy-title">What These Scores Mean in Real Life</div>
+                    <table>
+                        <tr>
+                            <th>Score</th>
+                            <th>What It Means</th>
+                            <th>Human Equivalent</th>
+                        </tr>
+                        <tr>
+                            <td><strong>90%+ on MMLU</strong></td>
+                            <td>Can pass professional licensing exams</td>
+                            <td>Top 10% of college graduates</td>
+                        </tr>
+                        <tr>
+                            <td><strong>95%+ on HumanEval</strong></td>
+                            <td>Better at coding than most programmers</td>
+                            <td>Senior software engineer</td>
+                        </tr>
+                        <tr>
+                            <td><strong>95%+ on GSM8K</strong></td>
+                            <td>Perfect on problems that stump adults</td>
+                            <td>99th percentile on standardized tests</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="showModal('capability-mmlu')">
+                        <div class="stat-label">MMLU (KNOWLEDGE)</div>
+                        <div class="stat-value">93.1%</div>
+                        <div class="stat-context">GPT-5 (2025)</div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 93%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-comparison">
+                            Was 43.9% in 2020 → More than <strong>doubled</strong>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" onclick="showModal('capability-code')">
+                        <div class="stat-label">HUMANEVAL (CODING)</div>
+                        <div class="stat-value">97.3%</div>
+                        <div class="stat-context">DeepSeek-R1 (2025)</div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 97%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-comparison">
+                            Was 28.8% in 2021 → <strong>Nearly perfect</strong>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" onclick="showModal('capability-math')">
+                        <div class="stat-label">GSM8K (MATH)</div>
+                        <div class="stat-value">98.7%</div>
+                        <div class="stat-context">GPT-5 (2025)</div>
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 98%;"></div>
+                            </div>
+                        </div>
+                        <div class="stat-comparison">
+                            Was 56.5% in 2022 → <strong>Essentially solved</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="expandable">
+                    <div class="expandable-header" onclick="toggleExpand(this)">
+                        <span style="color: var(--secondary);">▶ What's being automated RIGHT NOW? (Task breakdown)</span>
+                        <span class="expandable-indicator">▶</span>
+                    </div>
+                    <div class="expandable-content">
+                        <div style="background: rgba(0,50,0,0.5); padding: 0.8rem; margin: 0.5rem 0; border-left: 3px solid var(--primary);">
+                            <strong>✅ SOLVED (95%+ accuracy):</strong>
+                            <ul style="margin-left: 2rem; margin-top: 0.5rem;">
+                                <li>Writing boilerplate code</li>
+                                <li>Translating between languages</li>
+                                <li>Answering factual questions</li>
+                                <li>Summarizing documents</li>
+                                <li>Basic customer service</li>
+                            </ul>
+                        </div>
+
+                        <div style="background: rgba(50,50,0,0.5); padding: 0.8rem; margin: 0.5rem 0; border-left: 3px solid var(--secondary);">
+                            <strong>🟡 NEARLY THERE (80-95%):</strong>
+                            <ul style="margin-left: 2rem; margin-top: 0.5rem;">
+                                <li>Writing complex software</li>
+                                <li>Medical diagnosis from images</li>
+                                <li>Legal document analysis</li>
+                                <li>Advanced math proofs</li>
+                                <li>Creative writing</li>
+                            </ul>
+                        </div>
+
+                        <div style="background: rgba(50,25,0,0.5); padding: 0.8rem; margin: 0.5rem 0; border-left: 3px solid var(--danger);">
+                            <strong>🔴 STILL CHALLENGING (<80%):</strong>
+                            <ul style="margin-left: 2rem; margin-top: 0.5rem;">
+                                <li>Long-term planning (multi-month projects)</li>
+                                <li>Novel scientific research</li>
+                                <li>Dealing with ambiguity</li>
+                                <li>Physical world tasks (robotics)</li>
+                                <li>True creativity</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box warning">
+                    <div class="info-title">⚠️ THE SATURATION PROBLEM</div>
+                    <p><strong>Issue:</strong> Traditional benchmarks are "maxing out." Models are scoring 95-99%.</p>
+                    <p style="margin-top: 1rem;">New, harder benchmarks are being created for multi-step reasoning and real-world scenarios.</p>
+                </div>
+
+                <div class="info-box highlight">
+                    <div class="info-title">💼 KEY TAKEAWAY</div>
+                    <p>We're past "can AI do this?" Now it's "how long until AI does it <strong>better and cheaper</strong>?"</p>
+                    <p style="margin-top: 1rem;">For most knowledge work, the answer is: <strong>it already can</strong>. The question is deployment.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONCLUSION -->
+        <div class="terminal-window">
+            <div class="terminal-header">
+                <span>CONCLUSION.md - STRATEGIC SYNTHESIS</span>
+                <div class="terminal-buttons">
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                    <div class="terminal-button"></div>
+                </div>
+            </div>
+            <div class="terminal-body">
+                <div class="prompt">cat final_synthesis.txt</div>
+                
+                <div class="ascii">
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║   COMPUTE  ──→  POWER  ──→  CAPABILITY                  ║
+║      ↑            ↑            ↑                         ║
+║   4.4x/yr     15%/yr      +50%/yr                        ║
+║                                                           ║
+║   The chain is unbreakable and accelerating              ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+                </div>
+
+                <h2 style="text-align: center; margin: 2rem 0;">WHAT THIS MEANS FOR THE FUTURE</h2>
+
+                <div class="info-box highlight" style="border-width: 3px;">
+                    <div class="info-title" style="font-size: 1.6rem;">🎯 FOR INVESTORS & STRATEGISTS</div>
+                    
+                    <h3 style="color: var(--secondary); margin-top: 1.5rem;">Where the Money Is:</h3>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li><strong>Energy infrastructure:</strong> Power plants, cooling, grid upgrades</li>
+                        <li><strong>Chip manufacturing:</strong> NVIDIA, TSMC, ASML (chokepoints)</li>
+                        <li><strong>Applications:</strong> Tools that justify $100M+ inference costs</li>
+                    </ul>
+
+                    <h3 style="color: var(--secondary); margin-top: 1.5rem;">What's Getting Commoditized:</h3>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li>Generic chatbots (everyone will have one)</li>
+                        <li>Basic code generation (built into IDEs)</li>
+                        <li>Simple analysis tasks (automated away)</li>
+                    </ul>
+                </div>
+
+                <div class="info-box warning" style="border-width: 3px;">
+                    <div class="info-title" style="font-size: 1.6rem;">🌍 FOR COUNTRIES</div>
+                    
+                    <h3 style="color: var(--danger); margin-top: 1.5rem;">The Winners:</h3>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li><strong>US:</strong> Most chips, most power, most capital</li>
+                        <li><strong>China:</strong> Fast infrastructure, government support</li>
+                        <li><strong>Middle East:</strong> Cheap power, buying expertise</li>
+                    </ul>
+
+                    <h3 style="color: var(--danger); margin-top: 1.5rem;">The Constraint:</h3>
+                    <p style="margin-top: 1rem;">By 2027-2028, electricity supply could limit AI development more than chips or talent.</p>
+                </div>
+
+                <div class="info-box beginner" style="border-width: 3px;">
+                    <div class="info-title" style="font-size: 1.6rem;">💼 FOR WORKERS</div>
+                    
+                    <h3 style="color: var(--info); margin-top: 1.5rem;">Jobs Being Automated First:</h3>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li>Junior programmers (code generation 95%+)</li>
+                        <li>Content writers</li>
+                        <li>Data entry & analysis</li>
+                        <li>Customer support</li>
+                        <li>Translation services</li>
+                    </ul>
+
+                    <h3 style="color: var(--info); margin-top: 1.5rem;">Skills That Still Matter:</h3>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li>Judgment with incomplete info</li>
+                        <li>Managing/directing AI systems</li>
+                        <li>Creative work requiring taste</li>
+                        <li>Interpersonal skills, leadership</li>
+                        <li>Physical world tasks</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: center; margin: 3rem 0; padding: 2rem; background: rgba(0,50,0,0.8); border: 3px solid var(--primary);">
+                    <h2 style="font-size: 2rem; margin-bottom: 1.5rem; color: var(--primary-bright);">THE BOTTOM LINE</h2>
+                    <p style="font-size: 1.3rem; line-height: 2; max-width: 800px; margin: 0 auto;">
+                        This isn't an "AI race."<br><br>
+                        It's an <span style="color: var(--secondary); text-shadow: 0 0 10px var(--secondary);">energy-constrained, chip-limited, infrastructure race</span><br><br>
+                        that happens to produce intelligence as output.
+                    </p>
+                    <p style="margin-top: 2rem; font-size: 1.1rem; color: var(--primary-dim);">
+                        Winners = those who can secure:<br>
+                        <strong style="color: var(--primary);">POWER → CHIPS → TALENT</strong>
+                    </p>
+                </div>
+
+                <div style="margin-top: 3rem; padding: 2rem; background: rgba(0,0,0,0.8); border: 2px solid var(--primary-dim);">
+                    <h3 style="color: var(--secondary); margin-bottom: 1rem;">📚 DATA SOURCES</h3>
+                    <ul style="line-height: 2; color: var(--primary-dim);">
+                        <li>Epoch AI: 3,200+ models analyzed</li>
+                        <li>IEA Energy Report (April 2025)</li>
+                        <li>OpenAI, Anthropic, Google model cards</li>
+                    </ul>
+                    <p style="margin-top: 1rem; font-size: 0.9rem;">Last updated: February 2026</p>
+                </div>
+
+                <div style="text-align: center; margin: 3rem 0;">
+                    <div class="prompt" style="display: inline;">shutdown -h now</div>
+                    <div style="margin-top: 1rem;">
+                        <span class="status status-ok">[  OK  ]</span> Analysis complete
+                    </div>
+                    <div style="margin-top: 0.5rem; color: var(--primary-dim);">
+                        System halted<span class="loading-dots"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">[X]</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+        
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff41';
+            ctx.font = fontSize + 'px monospace';
+            
+            for (let i = 0; i < drops.length; i++) {
+                const text = String.fromCharCode(0x30A0 + Math.random() * 96);
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Chart.js Setup
+        Chart.defaults.color = '#00ff41';
+        Chart.defaults.borderColor = '#003300';
+        Chart.defaults.font.family = "'Courier Prime', monospace";
+
+        // Data
+        const computeData = {
+            labels: ['2018\nGPT-1', '2019\nGPT-2', '2020\nGPT-3', '2021\nCodex', '2022\nPaLM', '2023\nGPT-4', '2024\nGemini', '2024\nDeepSeek', '2025\nR1', '2025\nKimi', '2025\nGPT-5'],
+            flops: [3.14e21, 1.5e22, 3.14e23, 3.14e23, 2.5e24, 2.1e25, 5e25, 2.79e24, 4.02e24, 2.98e24, 6.6e25],
+            costs: [0.12, 0.25, 4.6, 2, 17, 78, 191, 5.6, 6.8, 15, 290]
+        };
+
+        const powerData = {
+            labels: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029', '2030'],
+            twh: [200, 240, 290, 340, 415, 530, 650, 740, 820, 890, 945],
+            percent: [0.8, 0.9, 1.1, 1.3, 1.5, 1.9, 2.2, 2.5, 2.7, 2.9, 3.0]
+        };
+
+        const capabilityData = {
+            labels: ['2020', '2021', '2022', '2022', '2023', '2023', '2024', '2024', '2025', '2025', '2025'],
+            mmlu: [43.9, null, 67.6, 69.3, 86.4, 90.0, 88.7, 92.3, 91.0, 90.5, 93.1],
+            humaneval: [0, 28.8, null, 26.2, 67.0, 74.4, 92.0, 92.0, 97.3, 95.8, 96.5],
+            gsm8k: [0, null, null, 56.5, 92.0, 94.4, 96.4, 96.0, 97.3, 98.1, 98.7]
+        };
+
+        // Compute Chart
+        let computeChart;
+        const computeCtx = document.getElementById('computeChart').getContext('2d');
+        computeChart = new Chart(computeCtx, {
+            type: 'line',
+            data: {
+                labels: computeData.labels,
+                datasets: [{
+                    label: 'Training FLOPS',
+                    data: computeData.flops,
+                    borderColor: '#00ff41',
+                    backgroundColor: 'rgba(0, 255, 65, 0.2)',
+                    pointBackgroundColor: '#00ff41',
+                    pointBorderColor: '#000',
+                    pointBorderWidth: 2,
+                    pointRadius: 8,
+                    pointHoverRadius: 12,
+                    borderWidth: 3,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#000',
+                        borderColor: '#00ff41',
+                        borderWidth: 3,
+                        titleColor: '#ffff00',
+                        bodyColor: '#00ff41',
+                        padding: 15,
+                        displayColors: false,
+                        callbacks: {
+                            title: (context) => context[0].label.split('\n')[1],
+                            label: (context) => 'FLOPS: ' + context.parsed.y.toExponential(2),
+                            afterLabel: (context) => 'Cost: $' + computeData.costs[context.dataIndex] + 'M'
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'logarithmic',
+                        ticks: { callback: (value) => { const exp = Math.log10(value); return Number.isInteger(exp) ? '10^' + exp : ''; }},
+                        grid: { color: '#003300' }
+                    },
+                    x: { grid: { color: '#003300' }}
+                }
+            }
+        });
+
+        function showComputeView(view, button) {
+            document.querySelectorAll('.chart-controls button').forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            if (view === 'flops') {
+                computeChart.options.scales.y.type = 'logarithmic';
+                computeChart.data.datasets[0].data = computeData.flops;
+            } else {
+                computeChart.options.scales.y.type = 'linear';
+                computeChart.data.datasets[0].data = computeData.costs;
+            }
+            computeChart.update();
+        }
+
+        // Power Chart
+        let powerChart;
+        const powerCtx = document.getElementById('powerChart').getContext('2d');
+        powerChart = new Chart(powerCtx, {
+            type: 'line',
+            data: {
+                labels: powerData.labels,
+                datasets: [{
+                    label: 'Energy (TWh)',
+                    data: powerData.twh,
+                    borderColor: '#00ff41',
+                    backgroundColor: 'rgba(0, 255, 65, 0.2)',
+                    fill: true,
+                    pointBackgroundColor: '#00ff41',
+                    pointBorderColor: '#000',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 10,
+                    borderWidth: 3,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#000',
+                        borderColor: '#00ff41',
+                        borderWidth: 3,
+                        titleColor: '#ffff00',
+                        bodyColor: '#00ff41',
+                        padding: 15,
+                        displayColors: false
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#003300' }},
+                    x: { grid: { color: '#003300' }}
+                }
+            }
+        });
+
+        function showPowerView(view, button) {
+            document.querySelectorAll('#powerChart').parentElement.querySelectorAll('.chart-button').forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            powerChart.data.datasets[0].data = view === 'absolute' ? powerData.twh : powerData.percent;
+            powerChart.update();
+        }
+
+        // Capability Chart
+        let capabilityChart;
+        const capabilityCtx = document.getElementById('capabilityChart').getContext('2d');
+        capabilityChart = new Chart(capabilityCtx, {
+            type: 'line',
+            data: {
+                labels: capabilityData.labels,
+                datasets: [
+                    {
+                        label: 'MMLU (Knowledge)',
+                        data: capabilityData.mmlu,
+                        borderColor: '#00ff41',
+                        backgroundColor: 'rgba(0, 255, 65, 0.1)',
+                        tension: 0.4,
+                        pointRadius: 6,
+                        borderWidth: 3,
+                        spanGaps: true
+                    },
+                    {
+                        label: 'HumanEval (Coding)',
+                        data: capabilityData.humaneval,
+                        borderColor: '#00ffff',
+                        backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                        tension: 0.4,
+                        pointRadius: 6,
+                        borderWidth: 3,
+                        spanGaps: true
+                    },
+                    {
+                        label: 'GSM8K (Math)',
+                        data: capabilityData.gsm8k,
+                        borderColor: '#ffff00',
+                        backgroundColor: 'rgba(255, 255, 0, 0.1)',
+                        tension: 0.4,
+                        pointRadius: 6,
+                        borderWidth: 3,
+                        spanGaps: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { color: '#00ff41', padding: 15, font: { size: 11 }}
+                    },
+                    tooltip: {
+                        backgroundColor: '#000',
+                        borderColor: '#00ff41',
+                        borderWidth: 3,
+                        titleColor: '#ffff00',
+                        bodyColor: '#00ff41',
+                        padding: 15
+                    }
+                },
+                scales: {
+                    y: {
+                        min: 0,
+                        max: 100,
+                        grid: { color: '#003300' },
+                        ticks: { callback: (value) => value + '%' }
+                    },
+                    x: { grid: { color: '#003300' }}
+                }
+            }
+        });
+
+        const datasetMap = { 'mmlu': 0, 'humaneval': 1, 'gsm8k': 2 };
+        function toggleCapability(metric, button) {
+            const dataset = capabilityChart.data.datasets[datasetMap[metric]];
+            dataset.hidden = !dataset.hidden;
+            button.textContent = dataset.hidden ? '✗ ' + button.textContent.substring(2) : '✓ ' + button.textContent.substring(2);
+            button.classList.toggle('active');
+            capabilityChart.update();
+        }
+
+        // Expandables
+        function toggleExpand(element) {
+            element.parentElement.classList.toggle('open');
+        }
+
+        // Modals
+        const modalData = {
+            'compute-growth': {
+                title: 'Compute Growth Deep Dive',
+                content: `
+                    <h3 style="color: #ffff00; margin-bottom: 1rem;">How Fast Is This Really Growing?</h3>
+                    <table>
+                        <tr><th>Year</th><th>Model</th><th>FLOPS</th><th>vs Previous</th></tr>
+                        <tr><td>2018</td><td>GPT-1</td><td>3.14×10²¹</td><td>-</td></tr>
+                        <tr><td>2019</td><td>GPT-2</td><td>1.5×10²²</td><td>4.8x</td></tr>
+                        <tr><td>2020</td><td>GPT-3</td><td>3.14×10²³</td><td>21x</td></tr>
+                        <tr><td>2023</td><td>GPT-4</td><td>2.1×10²⁵</td><td>67x</td></tr>
+                        <tr><td>2025</td><td>GPT-5</td><td>6.6×10²⁵</td><td>3.1x</td></tr>
+                    </table>
+                    <p style="margin-top: 1rem;"><strong>Key insight:</strong> 2018-2023 growth was explosive (10-20x/yr). 2023-2025 is slowing (3x/yr) due to chip supply and power constraints.</p>
+                `
+            },
+            'compute-cost': {
+                title: 'Training Cost Breakdown',
+                content: `
+                    <h3 style="color: #ffff00; margin-bottom: 1rem;">Where Does $290M Go?</h3>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li><strong>$200M:</strong> Chip rental (H100/H800 GPUs)</li>
+                        <li><strong>$50M:</strong> Electricity</li>
+                        <li><strong>$30M:</strong> Data center infrastructure</li>
+                        <li><strong>$10M:</strong> Engineers</li>
+                    </ul>
+                `
+            },
+            'compute-future': {
+                title: 'The Billion-Dollar Model Era',
+                content: `
+                    <h3 style="color: #ffff00; margin-bottom: 1rem;">What Happens at $1B+?</h3>
+                    <p><strong>Only These Players Can Afford It:</strong></p>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li>OpenAI (Microsoft)</li>
+                        <li>Google DeepMind</li>
+                        <li>Anthropic (if funded)</li>
+                        <li>Meta (maybe)</li>
+                        <li>Chinese government labs</li>
+                    </ul>
+                    <p style="margin-top: 1rem; color: #ff4444;">This creates concentration of power in ~5 organizations globally.</p>
+                `
+            },
+            'power-now': {
+                title: '2024 Power Consumption',
+                content: `
+                    <h3 style="color: #ffff00;">415 TWh in Context</h3>
+                    <p>That's more electricity than:</p>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li>The entire UK (300 TWh)</li>
+                        <li>All of South Korea (560 TWh) × 75%</li>
+                        <li>38 million US homes for a year</li>
+                    </ul>
+                `
+            },
+            'power-growth': {
+                title: 'Power Growth Rate',
+                content: `
+                    <h3 style="color: #ffff00;">Why 15%/year?</h3>
+                    <p>Three factors:</p>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li>More AI training (exponential growth)</li>
+                        <li>More inference (billions of queries/day)</li>
+                        <li>Crypto mining (still significant)</li>
+                    </ul>
+                    <p style="margin-top: 1rem;">Compare to other sectors (3-4%/yr) - AI is growing 4x faster.</p>
+                `
+            },
+            'power-future': {
+                title: '2030: 945 TWh',
+                content: `
+                    <h3 style="color: #ffff00;">Infrastructure Required</h3>
+                    <p>To reach 945 TWh by 2030 requires:</p>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li>~50 new 1GW power plants</li>
+                        <li>Massive grid upgrades</li>
+                        <li>$500B+ in infrastructure investment</li>
+                    </ul>
+                    <p style="margin-top: 1rem;">This takes 5-10 years to build, so we're already behind schedule.</p>
+                `
+            },
+            'capability-mmlu': {
+                title: 'MMLU Progress',
+                content: `
+                    <h3 style="color: #ffff00;">From 44% to 93% in 5 Years</h3>
+                    <p>MMLU tests 57 subjects including law, medicine, mathematics, history, computer science.</p>
+                    <p style="margin-top: 1rem;"><strong>What 93% means:</strong></p>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li>Can pass bar exam</li>
+                        <li>Can pass medical licensing</li>
+                        <li>Better than 90% of college graduates</li>
+                    </ul>
+                `
+            },
+            'capability-code': {
+                title: 'Coding Ability: Nearly Perfect',
+                content: `
+                    <h3 style="color: #ffff00;">97.3% on HumanEval</h3>
+                    <p>HumanEval has 164 programming problems. AI now solves 160 of them correctly.</p>
+                    <p style="margin-top: 1rem;"><strong>Real impact:</strong></p>
+                    <ul style="margin-left: 2rem; line-height: 2;">
+                        <li>Junior dev tasks: fully automatable</li>
+                        <li>Code review: AI catches most bugs</li>
+                        <li>Documentation: auto-generated</li>
+                    </ul>
+                `
+            },
+            'capability-math': {
+                title: 'Math: Essentially Solved',
+                content: `
+                    <h3 style="color: #ffff00;">98.7% on GSM8K</h3>
+                    <p>GSM8K is grade-school math word problems requiring multi-step reasoning.</p>
+                    <p style="margin-top: 1rem;">AI now solves 7,896 out of 8,000 problems correctly. That's better than 99% of humans.</p>
+                `
+            }
+        };
+
+        function showModal(id) {
+            const modal = document.getElementById('modal');
+            const data = modalData[id];
+            document.getElementById('modal-body').innerHTML = `
+                <h2 style="color: #00ff41; margin-bottom: 1rem;">${data.title}</h2>
+                ${data.content}
+            `;
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('modal')) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
