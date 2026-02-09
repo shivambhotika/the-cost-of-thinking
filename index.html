@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Explained for Plebs</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+    <title>The Cost Of Thinking - The AI Reality Check</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@400;600;700;800&display=swap');
@@ -474,57 +473,58 @@
         }
         
         .invoice-container {
-            background: white; max-width: 800px; width: 100%;
-            border: 8px solid #000; padding: 0; position: relative;
-            box-shadow: 20px 20px 0 rgba(0,0,0,0.3);
+            background: white; max-width: 700px; width: 100%;
+            border: 6px solid #000; padding: 0; position: relative;
+            box-shadow: 15px 15px 0 rgba(0,0,0,0.3);
+            max-height: 85vh; overflow-y: auto;
         }
         
         .invoice-content {
             font-family: 'Space Mono', monospace;
-            font-size: 0.85rem; line-height: 1.6;
-            padding: 40px; color: #000;
+            font-size: 0.7rem; line-height: 1.4;
+            padding: 25px; color: #000;
         }
         
         .invoice-header {
-            text-align: center; border-bottom: 3px double #000;
-            padding-bottom: 20px; margin-bottom: 20px;
+            text-align: center; border-bottom: 2px double #000;
+            padding-bottom: 12px; margin-bottom: 12px;
         }
         
         .invoice-company {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 2rem; letter-spacing: 2px;
+            font-size: 1.5rem; letter-spacing: 1px;
         }
         
         .invoice-line {
-            border-top: 1px solid #000; margin: 15px 0;
+            border-top: 1px solid #000; margin: 10px 0;
         }
         
         .invoice-item {
             display: flex; justify-content: space-between;
-            padding: 8px 0; border-bottom: 1px solid #ddd;
+            padding: 5px 0; border-bottom: 1px solid #ddd;
         }
         
         .invoice-total {
-            border: 4px solid #000; padding: 20px;
-            text-align: center; margin: 20px 0;
+            border: 3px solid #000; padding: 12px;
+            text-align: center; margin: 12px 0;
             background: #f8f8f8;
         }
         
         .invoice-total-amount {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.5rem; color: #ff4444;
+            font-size: 2rem; color: #ff4444;
         }
         
         .invoice-comparisons {
-            background: #fff3cd; border: 4px solid #000;
-            padding: 20px; margin-top: 20px;
+            background: #fff3cd; border: 3px solid #000;
+            padding: 12px; margin-top: 12px;
         }
         
         .invoice-close {
             position: sticky; bottom: 0; background: #000;
-            color: white; border: none; padding: 15px;
+            color: white; border: none; padding: 12px;
             width: 100%; cursor: pointer; font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.5rem; letter-spacing: 1px;
+            font-size: 1.3rem; letter-spacing: 1px;
         }
         
         .invoice-close:hover { background: #333; }
@@ -828,8 +828,8 @@
         <!-- HEADER -->
         <div class="header">
             <div>
-                <div class="logo">AI Explained for Plebs</div>
-                <div class="subtitle">An explainer check nobody asked for (but everyone needs)</div>
+                <div class="logo">THE COST OF THINKING</div>
+                <div class="subtitle">The AI reality check nobody asked for (but everyone needs)</div>
             </div>
             <button class="about-button" onclick="toggleModal()">ABOUT</button>
         </div>
@@ -1945,15 +1945,15 @@
             const invoice = `
 <div class="invoice-header">
     <div class="invoice-company">SILICON VALLEY COMPUTE</div>
-    <div style="margin-top: 10px; font-size: 0.9rem;">Cloud Infrastructure Services</div>
-    <div style="margin-top: 15px; font-size: 0.8rem;">
+    <div style="margin-top: 6px; font-size: 0.75rem;">Cloud Infrastructure Services</div>
+    <div style="margin-top: 8px; font-size: 0.7rem;">
         Invoice #: INV-2025-${Math.floor(Math.random() * 900000 + 100000)}<br>
         Date: Feb 9, 2026<br>
         Account: YOUR_STARTUP_INC
     </div>
 </div>
 
-<div style="margin: 20px 0; padding: 15px; background: #f8f8f8; border: 3px solid #000;">
+<div style="margin: 10px 0; padding: 10px; background: #f8f8f8; border: 2px solid #000; font-size: 0.7rem;">
     <strong>PROJECT:</strong> ${data.title}<br>
     <em>${data.subtitle}</em><br>
     <strong>BILLING PERIOD:</strong> ${data.months} months
@@ -1961,7 +1961,7 @@
 
 <div class="invoice-line"></div>
 
-<div style="margin: 15px 0;">
+<div style="margin: 8px 0; font-size: 0.75rem;">
     <strong>COMPUTE RESOURCES</strong>
 </div>
 
@@ -1980,7 +1980,7 @@
 
 <div class="invoice-line"></div>
 
-<div style="margin: 15px 0;">
+<div style="margin: 8px 0; font-size: 0.75rem;">
     <strong>INFRASTRUCTURE</strong>
 </div>
 
@@ -1999,7 +1999,7 @@
 
 <div class="invoice-line"></div>
 
-<div style="margin: 15px 0;">
+<div style="margin: 8px 0; font-size: 0.75rem;">
     <strong>PROFESSIONAL SERVICES</strong>
 </div>
 
@@ -2016,32 +2016,32 @@
     <span>$${(data.testing / 1000000).toFixed(1)}M</span>
 </div>
 
-<div class="invoice-line" style="margin: 25px 0;"></div>
+<div class="invoice-line" style="margin: 12px 0;"></div>
 
-<div style="text-align: right; margin-bottom: 15px;">
-    <div style="margin-bottom: 8px;">SUBTOTAL: $${(total / 1000000).toFixed(1)}M</div>
+<div style="text-align: right; margin-bottom: 10px; font-size: 0.7rem;">
+    <div style="margin-bottom: 5px;">SUBTOTAL: $${(total / 1000000).toFixed(1)}M</div>
     <div>Infrastructure Fee (2%): $${(infraFee / 1000000).toFixed(2)}M</div>
 </div>
 
 <div class="invoice-total">
-    <div style="font-size: 1rem; margin-bottom: 10px;">TOTAL DUE</div>
+    <div style="font-size: 0.8rem; margin-bottom: 6px;">TOTAL DUE</div>
     <div class="invoice-total-amount">$${(grandTotal / 1000000).toFixed(1)}M</div>
 </div>
 
-<div style="margin: 20px 0; padding: 15px; background: #fff; border: 2px solid #666; font-size: 0.85rem;">
+<div style="margin: 10px 0; padding: 10px; background: #fff; border: 2px solid #666; font-size: 0.65rem;">
     <strong>PAYMENT TERMS:</strong> Due upon receipt<br>
     Late fees: $500K/day<br>
     <em>POWER SURCHARGE: Additional charges may apply if you cause rolling blackouts</em>
 </div>
 
 <div class="invoice-comparisons">
-    <div style="font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; margin-bottom: 15px;">
+    <div style="font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; margin-bottom: 8px;">
         FOR COMPARISON, THIS AMOUNT EQUALS:
     </div>
-    ${data.comparisons.map(c => `<div style="margin: 8px 0; font-size: 1rem;">• ${c}</div>`).join('')}
+    ${data.comparisons.map(c => `<div style="margin: 5px 0; font-size: 0.75rem;">• ${c}</div>`).join('')}
 </div>
 
-<div style="margin-top: 25px; padding: 15px; border-top: 2px solid #000; font-size: 0.75rem; text-align: center; color: #666;">
+<div style="margin-top: 12px; padding: 10px; border-top: 2px solid #000; font-size: 0.65rem; text-align: center; color: #666;">
     Questions? Contact: billing@siliconvalleycompute.ai<br>
     <em>(Please don't call. We know you can't pay this.)</em>
 </div>
