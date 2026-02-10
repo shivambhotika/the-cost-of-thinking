@@ -820,104 +820,234 @@
             .model-cards, .water-profiles, .quiz-options, .compute-stat-grid, .water-comparisons {
                 grid-template-columns: 1fr;
             }
+            .credit-card-grid, .bottleneck-grid {
+                grid-template-columns: 1fr !important;
+            }
         }
         
         @media (max-width: 768px) {
+            /* CRITICAL: Prevent all horizontal overflow */
+            html, body {
+                overflow-x: hidden;
+                max-width: 100vw;
+            }
+            
             body {
                 padding: 10px;
             }
             
-            .container {
-                border: 4px solid var(--border);
+            * {
+                max-width: 100%;
+                word-wrap: break-word;
             }
             
+            .container {
+                border: 4px solid var(--border);
+                overflow-x: hidden;
+                width: 100%;
+            }
+            
+            /* Force all grids to single column */
+            .credit-card-grid, 
+            .bottleneck-grid,
+            .main-grid,
+            .tier-list,
+            .napkin-showcase,
+            .personal-stat-grid,
+            .comparison-grid,
+            .knowledge-grid {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+            }
+            
+            /* Header */
             .header {
                 flex-direction: column;
                 text-align: center;
-                padding: 20px;
+                padding: 20px 15px;
                 gap: 15px;
             }
             
             .logo {
-                font-size: 2.5rem;
+                font-size: 2rem;
+                letter-spacing: 1px;
+                line-height: 1.1;
             }
             
             .subtitle {
-                font-size: 0.85rem;
+                font-size: 0.8rem;
             }
             
             .about-button {
                 padding: 10px 25px;
-                font-size: 1.2rem;
+                font-size: 1.1rem;
+                width: auto;
             }
             
+            /* Modal - Fix overflow */
+            .modal {
+                padding: 10px;
+            }
+            
+            .modal-content {
+                margin: 20px auto;
+                padding: 25px 20px;
+                max-width: calc(100vw - 40px);
+                border: 4px solid var(--border);
+                box-shadow: 8px 8px 0 rgba(0,0,0,0.2);
+            }
+            
+            .modal-title {
+                font-size: 1.8rem;
+            }
+            
+            .modal-text {
+                font-size: 0.95rem;
+            }
+            
+            .close-modal {
+                font-size: 2rem;
+                top: 10px;
+                right: 15px;
+            }
+            
+            /* Hero */
             .hero-hook {
                 padding: 40px 20px;
             }
             
             .hero-hook-title {
-                font-size: 2.5rem;
+                font-size: 2rem;
+                line-height: 1.2;
             }
             
             .hero-stat-reveal {
-                font-size: 1.1rem;
-                padding: 20px;
+                font-size: 1rem;
+                padding: 20px 15px;
             }
             
             .stat-number {
-                font-size: 3.5rem;
+                font-size: 2.5rem;
+                display: block;
+                margin: 10px 0;
             }
             
+            /* Section Headers */
             .section-header {
-                font-size: 2rem;
-                padding: 20px;
+                font-size: 1.8rem;
+                padding: 20px 15px;
                 flex-direction: column;
                 text-align: center;
                 gap: 10px;
             }
             
+            .section-header > span {
+                font-size: 1.8rem !important;
+            }
+            
             .section-subtitle {
-                margin: -10px 20px 20px 20px;
-                padding: 20px;
-                font-size: 1rem;
+                margin: -10px 15px 20px 15px;
+                padding: 20px 15px;
+                font-size: 0.95rem;
+                border-left: 6px solid var(--border);
             }
             
             .section-subtitle::before {
                 display: none;
             }
             
+            /* Panels */
+            .panel {
+                border-right: none !important;
+            }
+            
             .panel-header {
-                font-size: 1.4rem;
-                padding: 15px;
+                font-size: 1.3rem;
+                padding: 12px 15px;
             }
             
             .panel-body {
-                padding: 20px;
+                padding: 20px 15px;
+            }
+            
+            /* Chart containers on mobile */
+            .panel-body > div[style*="position: relative"] {
+                height: 300px !important;
+                width: 100% !important;
+                max-width: 100% !important;
             }
             
             .stat-big {
-                font-size: 4rem;
+                font-size: 3.5rem;
             }
             
-            .timeline-year {
-                font-size: 4rem;
+            .stat-label {
+                font-size: 0.65rem;
             }
             
-            .timeline-content {
-                font-size: 1.1rem;
+            .highlight-box {
+                padding: 15px;
+                font-size: 0.9rem;
             }
             
-            .timeline-marks {
-                font-size: 0.8rem;
-            }
-            
-            .timeline-mark {
+            .highlight-box.mega {
+                padding: 20px;
                 font-size: 1rem;
             }
             
+            /* Charts - Force responsiveness */
+            canvas {
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            
+            #capabilityChart,
+            #computeChart {
+                width: 100% !important;
+                height: 100% !important;
+            }
+            
+            /* Timeline */
+            .timeline-container {
+                padding: 30px 15px;
+            }
+            
+            .timeline-year {
+                font-size: 3rem;
+            }
+            
+            .timeline-content {
+                font-size: 1rem;
+                padding: 0 10px;
+            }
+            
+            .timeline-marks {
+                flex-direction: row;
+                gap: 5px;
+            }
+            
+            .timeline-mark {
+                font-size: 0.85rem;
+                flex: 1;
+            }
+            
+            .timeline-mark small {
+                font-size: 0.7rem;
+            }
+            
+            .timeline-description {
+                font-size: 0.85rem;
+                padding: 0 10px;
+            }
+            
             /* Model Cards */
+            .model-cards {
+                grid-template-columns: 1fr !important;
+                gap: 15px;
+            }
+            
             .model-card {
-                padding: 25px;
+                padding: 20px;
             }
             
             .model-card-icon {
@@ -925,64 +1055,162 @@
             }
             
             .model-card-title {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
+            }
+            
+            .model-card-desc {
+                font-size: 0.9rem;
             }
             
             /* Invoice Modal */
             .invoice-modal {
-                padding: 10px;
+                padding: 0;
             }
             
             .invoice-container {
-                max-width: 100%;
+                max-width: calc(100vw - 20px);
+                width: calc(100vw - 20px);
+                margin: 10px;
                 border: 4px solid #000;
                 max-height: 90vh;
             }
             
             .invoice-content {
                 padding: 15px;
-                font-size: 0.65rem;
+                font-size: 0.6rem;
+                line-height: 1.3;
             }
             
             .invoice-company {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
+            }
+            
+            .invoice-total {
+                padding: 10px;
             }
             
             .invoice-total-amount {
-                font-size: 1.8rem;
+                font-size: 1.5rem;
             }
             
-            /* Water Profiles */
+            .invoice-comparisons {
+                padding: 10px;
+            }
+            
+            .invoice-close {
+                padding: 12px;
+                font-size: 1.2rem;
+            }
+            
+            /* Compute Slider */
+            .compute-slider-container {
+                padding: 25px 15px;
+            }
+            
+            .compute-labels {
+                font-size: 0.6rem;
+                flex-wrap: wrap;
+            }
+            
+            .compute-labels span {
+                flex: 0 0 33.33%;
+                text-align: center;
+                line-height: 1.2;
+            }
+            
+            .compute-level {
+                font-size: 2rem;
+            }
+            
+            .compute-display {
+                padding: 20px 15px;
+            }
+            
+            .compute-stat-grid {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .compute-stat-value {
+                font-size: 1.4rem;
+            }
+            
+            .compute-fun-fact {
+                padding: 15px;
+                font-size: 0.95rem;
+            }
+            
+            /* Water Usage */
             .water-profiles {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr !important;
                 gap: 10px;
             }
             
             .water-profile {
-                padding: 20px;
+                padding: 20px 15px;
             }
             
-            .water-container {
-                width: 250px;
-                height: 350px;
-            }
-            
-            .water-amount {
+            .water-profile-icon {
                 font-size: 2.5rem;
             }
             
-            .water-comparisons {
-                grid-template-columns: 1fr;
+            .water-profile-title {
+                font-size: 1.3rem;
             }
             
-            /* Quiz */
-            .quiz-question {
+            .water-visualization {
+                padding: 30px 15px;
+            }
+            
+            .water-container {
+                width: 200px;
+                height: 300px;
+                margin: 15px auto;
+            }
+            
+            .water-amount {
                 font-size: 2rem;
             }
             
+            .water-comparisons {
+                grid-template-columns: 1fr !important;
+                gap: 15px;
+            }
+            
+            .water-comparison-box {
+                padding: 20px 15px;
+            }
+            
+            .water-kicker {
+                padding: 25px 15px;
+            }
+            
+            .water-kicker-title {
+                font-size: 1.6rem;
+            }
+            
+            /* Quiz */
+            .quiz-container {
+                margin: 20px 0;
+            }
+            
+            .quiz-card {
+                padding: 25px 15px;
+                min-height: 350px;
+            }
+            
+            .quiz-question {
+                font-size: 1.6rem;
+                margin-bottom: 20px;
+            }
+            
+            .quiz-options {
+                grid-template-columns: 1fr !important;
+                gap: 12px;
+            }
+            
             .quiz-option {
-                padding: 25px;
-                font-size: 1.1rem;
+                padding: 20px 15px;
+                font-size: 1rem;
             }
             
             .quiz-option-icon {
@@ -990,149 +1218,254 @@
             }
             
             .quiz-reveal-header {
-                font-size: 2rem;
+                font-size: 1.8rem;
+                padding: 15px;
+            }
+            
+            .quiz-reveal-content {
+                font-size: 0.95rem;
+            }
+            
+            .quiz-next {
+                padding: 12px 30px;
+                font-size: 1.3rem;
             }
             
             .quiz-score {
-                font-size: 4rem;
+                font-size: 3.5rem;
             }
             
-            /* Compute Slider */
-            .compute-slider-container {
-                padding: 30px 20px;
+            .quiz-verdict {
+                font-size: 1.4rem;
             }
             
-            .compute-labels {
-                font-size: 0.65rem;
+            .quiz-restart {
+                padding: 12px 30px;
+                font-size: 1.3rem;
             }
             
-            .compute-level {
-                font-size: 2.5rem;
+            /* Comparison Section */
+            .comparison-grid {
+                grid-template-columns: 1fr !important;
+                gap: 10px;
             }
             
-            .compute-display {
-                padding: 25px;
-            }
-            
-            /* Comparison buttons */
             .comparison-button {
                 padding: 15px;
-                font-size: 0.9rem;
+                font-size: 1rem;
             }
             
             .button-icon {
-                font-size: 1.5rem;
+                font-size: 1.8rem;
             }
             
             .comparison-visual {
-                padding: 30px 20px;
+                padding: 30px 15px;
             }
             
             .comparison-stat {
-                font-size: 2.5rem;
+                font-size: 2.2rem;
             }
             
             .comparison-text {
-                font-size: 1rem;
+                font-size: 0.95rem;
             }
             
-            /* Napkin cards */
+            .comparison-detail {
+                font-size: 0.9rem;
+            }
+            
+            /* Napkin Cards */
+            .napkin-showcase {
+                grid-template-columns: 1fr !important;
+                gap: 20px;
+            }
+            
             .napkin-card {
-                padding: 25px;
+                padding: 25px 20px;
             }
             
             .napkin-card-number {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
             
             .napkin-card-text {
-                font-size: 1rem;
+                font-size: 0.95rem;
             }
             
-            /* Tier cards */
+            /* Tier List */
+            .tier-list {
+                grid-template-columns: 1fr !important;
+                gap: 15px;
+            }
+            
             .tier-card {
-                padding: 20px;
+                padding: 20px 15px;
+                min-height: auto;
             }
             
             .tier-title {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
+            }
+            
+            .tier-list li {
+                font-size: 0.9rem;
+            }
+            
+            /* Personal Stats */
+            .personal-box {
+                padding: 30px 20px;
+            }
+            
+            .personal-box-title {
+                font-size: 2rem;
+            }
+            
+            .personal-stat-grid {
+                grid-template-columns: 1fr !important;
+                gap: 15px;
+            }
+            
+            .personal-stat {
+                padding: 20px;
+            }
+            
+            .personal-stat-number {
+                font-size: 2.5rem;
+            }
+            
+            /* So What Section */
+            .sowhat-grid {
+                padding: 30px 20px;
+            }
+            
+            .sowhat-card {
+                padding: 25px 20px;
+            }
+            
+            .sowhat-card-title {
+                font-size: 1.6rem;
+            }
+            
+            .sowhat-card-text {
+                font-size: 1rem;
+            }
+            
+            /* Tables - Force horizontal scroll in container */
+            table {
+                font-size: 0.75rem;
+                width: 100%;
+            }
+            
+            th, td {
+                padding: 8px 6px;
+                white-space: nowrap;
+            }
+            
+            th {
+                font-size: 0.7rem;
             }
             
             /* Footer */
             .footer {
                 padding: 30px 20px;
-                font-size: 0.8rem;
+                font-size: 0.75rem;
             }
             
-            /* Modal */
-            .modal-content {
-                margin: 20px 10px;
-                padding: 30px 20px;
-            }
-            
-            .modal-title {
-                font-size: 2rem;
-            }
-            
-            .modal-text {
-                font-size: 1rem;
-            }
-            
-            /* Tables */
-            table {
-                font-size: 0.85rem;
-            }
-            
-            th, td {
-                padding: 10px;
+            .footer-title {
+                font-size: 1.3rem;
             }
         }
         
         @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
             .logo {
-                font-size: 2rem;
+                font-size: 1.6rem;
             }
             
             .hero-hook-title {
-                font-size: 2rem;
+                font-size: 1.6rem;
             }
             
             .section-header {
-                font-size: 1.6rem;
+                font-size: 1.5rem;
+                padding: 15px 10px;
+            }
+            
+            .section-header > span {
+                font-size: 1.5rem !important;
+            }
+            
+            .section-subtitle {
+                margin: -10px 10px 15px 10px;
+                padding: 15px 10px;
+                font-size: 0.85rem;
             }
             
             .stat-big {
-                font-size: 3rem;
+                font-size: 2.8rem;
             }
             
             .timeline-year {
-                font-size: 3rem;
+                font-size: 2.5rem;
+            }
+            
+            .timeline-content {
+                font-size: 0.9rem;
             }
             
             .quiz-question {
-                font-size: 1.6rem;
+                font-size: 1.3rem;
             }
             
             .quiz-option {
-                padding: 20px;
+                padding: 15px;
+                font-size: 0.9rem;
             }
             
             .water-container {
-                width: 200px;
-                height: 300px;
+                width: 180px;
+                height: 280px;
+            }
+            
+            .water-amount {
+                font-size: 1.8rem;
             }
             
             .invoice-content {
-                font-size: 0.6rem;
+                font-size: 0.55rem;
+                padding: 12px;
             }
             
             .compute-labels span {
-                font-size: 0.6rem;
-                line-height: 1.3;
+                font-size: 0.55rem;
             }
             
             .comparison-grid {
-                gap: 10px;
+                gap: 8px;
+            }
+            
+            .comparison-stat {
+                font-size: 1.8rem;
+            }
+            
+            .model-card {
+                padding: 15px;
+            }
+            
+            .panel-body {
+                padding: 15px 10px;
+            }
+            
+            table {
+                font-size: 0.7rem;
+            }
+            
+            th, td {
+                padding: 6px 4px;
             }
         }
     </style>
@@ -1194,7 +1527,9 @@
                         <div style="font-size: 0.95rem; margin-bottom: 15px; color: #666; font-weight: 600;">
                             Three core skills. All racing toward 100%. None of them stopping.
                         </div>
-                        <canvas id="capabilityChart" style="max-height: 400px;"></canvas>
+                        <div style="position: relative; height: 400px; width: 100%;">
+                            <canvas id="capabilityChart"></canvas>
+                        </div>
                         <div style="margin-top: 20px; font-size: 0.85rem; color: #666; line-height: 1.6;">
                             <strong>Knowledge</strong> = standardized test scores across 57 subjects (history, law, medicine, etc.)<br>
                             <strong>Coding</strong> = ability to write working software from scratch<br>
@@ -1363,7 +1698,9 @@
                                     COMPUTING POWER
                                 </button>
                             </div>
-                            <canvas id="computeChart" style="max-height: 400px;"></canvas>
+                            <div style="position: relative; height: 400px; width: 100%;">
+                                <canvas id="computeChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1385,7 +1722,7 @@
                 <div class="panel full-width">
                     <div class="panel-header red">THE CREDIT CARD BILL</div>
                     <div class="panel-body">
-                        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px;">
+                        <div class="credit-card-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px;">
                             <div>
                                 <div class="stat-label">TRAINING GPT-5 (2025)</div>
                                 <div class="stat-big" style="color: #ff4444; font-size: 6rem;">$290M</div>
@@ -1734,7 +2071,7 @@
                 <div class="panel full-width">
                     <div class="panel-header blue">THE ACTUAL BOTTLENECK</div>
                     <div class="panel-body">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                        <div class="bottleneck-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
                             <div>
                                 <div class="stat-label">POWER PLANTS NEEDED</div>
                                 <div class="stat-big" style="color: #4444ff; font-size: 6rem;">~50</div>
@@ -1973,6 +2310,7 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -2104,6 +2442,7 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: {
                         display: true,
